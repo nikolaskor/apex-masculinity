@@ -74,3 +74,9 @@ export async function loginAction(formData: FormData) {
 
   redirect("/dashboard");
 }
+
+export async function logoutAction() {
+  const supabase = getSupabaseServerClient();
+  await supabase.auth.signOut();
+  redirect("/login");
+}

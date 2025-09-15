@@ -13,7 +13,7 @@ export default async function AuthGuard({ children }: Props) {
   } = await supabase.auth.getSession();
 
   if (!session) {
-    redirect("/(auth)/login");
+    redirect("/login");
   }
 
   return <>{children}</>;

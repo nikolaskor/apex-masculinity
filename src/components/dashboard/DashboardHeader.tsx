@@ -1,0 +1,51 @@
+import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { logoutAction } from "@/app/(auth)/actions";
+
+export default async function DashboardHeader() {
+  const supabase = getSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let username = "";
+  let currentStreak = 0;
+
+  if (user) {
+    const [{ data: profile }, { data: streak }] = await Promise.all([
+      supabase.from("profiles").select("username").eq("id", user.id).single(),
+      supabase
+        .from("user_streaks")
+        .select("current_streak")
+        .eq("user_id", user.id)
+        .single(),
+    ]);
+    username = profile?.username ?? "";
+    currentStreak = streak?.current_streak ?? 0;
+  }
+
+  return (
+    <header className="w-full border-b">
+      <div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="text-xl font-semibold">Apex Challenge</div>
+          {username && (
+            <div className="text-sm text-muted-foreground">@{username}</div>
+          )}
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-sm">
+            🔥 Streak: <span className="font-medium">{currentStreak}</span>
+          </div>
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              className="rounded bg-black text-white px-3 py-1"
+            >
+              Log out
+            </button>
+          </form>
+        </div>
+      </div>
+    </header>
+  );
+}
