@@ -1,5 +1,6 @@
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import DailyChecklist from "@/components/dashboard/DailyChecklist";
 
 export default async function DashboardPage() {
   const supabase = getSupabaseServerClient();
@@ -26,19 +27,17 @@ export default async function DashboardPage() {
   return (
     <main>
       <DashboardHeader />
-      <section className="mx-auto max-w-5xl px-4 py-6 space-y-4">
-        <h2 className="text-xl font-semibold">
-          Welcome{username ? `, @${username}` : ""}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Your current streak is{" "}
-          <span className="font-medium">{currentStreak}</span> days.
-        </p>
-        <div className="rounded border p-4">
-          <p className="text-sm">
-            Daily checklist and weekly challenge sections will go here.
+      <section className="mx-auto max-w-5xl px-4 py-6 space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold">
+            Welcome{username ? `, @${username}` : ""}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Your current streak is{" "}
+            <span className="font-medium">{currentStreak}</span> days.
           </p>
         </div>
+        <DailyChecklist />
       </section>
     </main>
   );
