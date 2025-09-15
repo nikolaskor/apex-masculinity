@@ -1,0 +1,83 @@
+---
+alwaysApply: true
+---
+
+# Apex Masculinity Challenge - Development Rules
+
+## Project Context
+Building a habit tracking app with Next.js 15, Supabase, TypeScript.
+Users track 10 daily tasks, streaks reset on any failure.
+
+## Development Phases
+### Phase 1: Foundation (Week 1)
+- [ ] Supabase setup and schema
+- [ ] Authentication system  
+- [ ] Basic UI components
+- [ ] Project structure
+
+### Phase 2: Core Features (Week 2)  
+- [ ] Daily task checklist
+- [ ] Streak tracking logic
+- [ ] Dashboard layout
+- [ ] Midnight reset system
+
+### Phase 3: Social Features (Week 3)
+- [ ] Leaderboard implementation
+- [ ] Badge system
+- [ ] Real-time updates
+- [ ] User profiles
+
+### Phase 4: Polish & Deploy (Week 4)
+- [ ] UI/UX improvements  
+- [ ] Mobile optimization
+- [ ] Testing & bug fixes
+- [ ] Production deployment
+
+## Coding Standards
+- Use TypeScript for all files
+- Follow Next.js 15 App Router patterns
+- Use Tailwind for styling
+- Implement proper error handling
+- Add loading states for all async operations
+
+## Current Task
+Focus on one component at a time. Ask for specific implementation details.# Apex Masculinity Challenge - Development Rules
+
+## Project Context
+Building a habit tracking app with Next.js 15, Supabase, TypeScript.
+Users track 10 daily tasks, streaks reset on any failure.
+
+## Development Phases
+### Phase 1: Foundation (Week 1)
+- [ ] Supabase setup and schema
+- [ ] Authentication system  
+- [ ] Basic UI components
+- [ ] Project structure
+
+### Phase 2: Core Features (Week 2)  
+- [ ] Daily task checklist
+- [ ] Streak tracking logic
+- [ ] Dashboard layout
+- [ ] Midnight reset system
+
+### Phase 3: Social Features (Week 3)
+- [ ] Leaderboard implementation
+- [ ] Badge system
+- [ ] Real-time updates
+- [ ] User profiles
+
+### Phase 4: Polish & Deploy (Week 4)
+- [ ] UI/UX improvements  
+- [ ] Mobile optimization
+- [ ] Testing & bug fixes
+- [ ] Production deployment
+
+## Coding Standards
+- Use TypeScript for all files
+- Follow Next.js 15 App Router patterns
+- Use Tailwind for styling
+- Implement proper error handling
+- Add loading states for all async operations
+
+## Current Task
+Focus on one component at a time. Ask for specific implementation details.
