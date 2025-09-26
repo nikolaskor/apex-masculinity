@@ -1,6 +1,7 @@
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { logoutAction } from "@/app/(auth)/actions";
 import LiveStreak from "./LiveStreak";
+import HeaderNav from "./HeaderNav";
 
 export default async function DashboardHeader() {
   const supabase = getSupabaseServerClient();
@@ -34,6 +35,7 @@ export default async function DashboardHeader() {
           )}
         </div>
         <div className="flex items-center gap-4">
+          <HeaderNav />
           <div className="text-sm">
             🔥 Streak: <LiveStreak initial={currentStreak} />
           </div>

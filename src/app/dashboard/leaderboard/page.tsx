@@ -1,6 +1,7 @@
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import LeaderboardTable from "@/components/leaderboard/LeaderboardTable";
 import LiveLeaderboard from "@/components/leaderboard/LiveLeaderboard";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
 
 async function loadLeaderboard() {
   const supabase = getSupabaseServerClient();
@@ -47,13 +48,16 @@ export default async function LeaderboardPage() {
   const entries = await loadLeaderboard();
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Leaderboard</h1>
-        <div className="text-sm text-muted-foreground">Live updates</div>
-      </div>
-      <LeaderboardTable entries={entries} />
-      <LiveLeaderboard />
+    <main>
+      <DashboardHeader />
+      <section className="mx-auto max-w-4xl px-4 py-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Leaderboard</h1>
+          <div className="text-sm text-muted-foreground">Live updates</div>
+        </div>
+        <LeaderboardTable entries={entries} />
+        <LiveLeaderboard />
+      </section>
     </main>
   );
 }
