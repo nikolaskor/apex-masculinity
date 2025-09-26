@@ -19,14 +19,13 @@ export function getEarnedBadgesForStreak(streak: number): BadgeId[] {
 }
 
 export function mergeBadges(existing: unknown, streak: number): BadgeId[] {
-  const existingArr: string[] = Array.isArray(existing)
-    ? (existing as string[])
+  const existingArr: unknown[] = Array.isArray(existing)
+    ? (existing as unknown[])
     : [];
-  const set = new Set<BadgeId>(
-    existingArr.filter(
-      (b): b is BadgeId => (BADGE_THRESHOLDS as any)[b] != null
-    )
-  );
+  const set = new Set<BadgeId>();
+  for (const b of existingArr) {
+    if (typeof b === "string" && b in BADGE_THRESHOLDS) set.add(b as BadgeId);
+  }
   for (const badge of getEarnedBadgesForStreak(streak)) set.add(badge);
   return Array.from(set.values());
 }

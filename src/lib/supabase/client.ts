@@ -4,6 +4,14 @@ import type { Database } from "@/types/database";
 
 let browserClient: SupabaseClient<Database> | null = null;
 
+type CookieOptions = {
+  path?: string;
+  domain?: string;
+  sameSite?: "lax" | "strict" | "none" | string;
+  expires?: string | Date;
+  maxAge?: number;
+};
+
 export function getSupabaseBrowserClient(): SupabaseClient<Database> {
   if (browserClient) return browserClient;
 
@@ -29,7 +37,7 @@ export function getSupabaseBrowserClient(): SupabaseClient<Database> {
         );
         return match ? decodeURIComponent(match[1]) : undefined;
       },
-      set(name: string, value: string, options?: any) {
+      set(name: string, value: string, options?: CookieOptions) {
         if (typeof document === "undefined") return;
         const parts: string[] = [];
         parts.push(`${name}=${encodeURIComponent(value)}`);
@@ -45,7 +53,6 @@ export function getSupabaseBrowserClient(): SupabaseClient<Database> {
         if (options?.domain) parts.push(`domain=${options.domain}`);
         if (options?.sameSite)
           parts.push(`samesite=${String(options.sameSite).toLowerCase()}`);
-        // Only set secure flag on https
         if (
           typeof window !== "undefined" &&
           window.location.protocol === "https:"
@@ -53,7 +60,7 @@ export function getSupabaseBrowserClient(): SupabaseClient<Database> {
           parts.push("secure");
         document.cookie = parts.join("; ");
       },
-      remove(name: string, options?: any) {
+      remove(name: string, options?: CookieOptions) {
         if (typeof document === "undefined") return;
         const parts: string[] = [];
         parts.push(`${name}=`);
