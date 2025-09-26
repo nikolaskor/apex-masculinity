@@ -18,12 +18,50 @@ export function getSupabaseBrowserClient(): SupabaseClient<Database> {
 
   browserClient = createBrowserClient<Database>(url, anonKey, {
     cookies: {
-      get: (key: string) => {
+      get(name: string) {
         if (typeof document === "undefined") return undefined;
         const match = document.cookie.match(
-          new RegExp("(^| )" + key + "=([^;]+)")
+          new RegExp(
+            "(?:^|; )" +
+              name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, "\\$1") +
+              "=([^;]*)"
+          )
         );
-        return match ? decodeURIComponent(match[2]) : undefined;
+        return match ? decodeURIComponent(match[1]) : undefined;
+      },
+      set(name: string, value: string, options?: any) {
+        if (typeof document === "undefined") return;
+        const parts: string[] = [];
+        parts.push(`${name}=${encodeURIComponent(value)}`);
+        parts.push(`path=${options?.path ?? "/"}`);
+        if (options?.maxAge != null) parts.push(`max-age=${options.maxAge}`);
+        if (options?.expires) {
+          const expires =
+            typeof options.expires === "string"
+              ? options.expires
+              : options.expires.toUTCString?.();
+          if (expires) parts.push(`expires=${expires}`);
+        }
+        if (options?.domain) parts.push(`domain=${options.domain}`);
+        if (options?.sameSite)
+          parts.push(`samesite=${String(options.sameSite).toLowerCase()}`);
+        // Only set secure flag on https
+        if (
+          typeof window !== "undefined" &&
+          window.location.protocol === "https:"
+        )
+          parts.push("secure");
+        document.cookie = parts.join("; ");
+      },
+      remove(name: string, options?: any) {
+        if (typeof document === "undefined") return;
+        const parts: string[] = [];
+        parts.push(`${name}=`);
+        parts.push(`path=${options?.path ?? "/"}`);
+        if (options?.domain) parts.push(`domain=${options.domain}`);
+        parts.push("max-age=0");
+        parts.push("expires=Thu, 01 Jan 1970 00:00:00 GMT");
+        document.cookie = parts.join("; ");
       },
     },
   });
