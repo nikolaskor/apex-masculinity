@@ -2,6 +2,14 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import DailyChecklist from "@/components/dashboard/DailyChecklist";
 
+type ProfileRow = { username: string };
+type StreakRow = {
+  current_streak: number;
+  longest_streak: number;
+  badges: string[] | null;
+  last_completion_date: string | null;
+};
+
 export default async function DashboardPage() {
   const supabase = getSupabaseServerClient();
   const {
@@ -12,14 +20,24 @@ export default async function DashboardPage() {
   let currentStreak = 0;
 
   if (user) {
-    const [{ data: profile }, { data: streak }] = await Promise.all([
-      supabase.from("profiles").select("username").eq("id", user.id).single(),
-      supabase
-        .from("user_streaks")
-        .select("current_streak,longest_streak,badges,last_completion_date")
-        .eq("user_id", user.id)
-        .single(),
+    const profilePromise = supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", user.id)
+      .returns<ProfileRow[]>();
+    const streakPromise = supabase
+      .from("user_streaks")
+      .select("current_streak,longest_streak,badges,last_completion_date")
+      .eq("user_id", user.id)
+      .returns<StreakRow[]>();
+
+    const [{ data: profileRows }, { data: streakRows }] = await Promise.all([
+      profilePromise,
+      streakPromise,
     ]);
+    const profile = profileRows?.[0];
+    const streak = streakRows?.[0];
+
     username = profile?.username ?? "";
     currentStreak = streak?.current_streak ?? 0;
   }
