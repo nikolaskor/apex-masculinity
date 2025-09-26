@@ -3,6 +3,9 @@ import { logoutAction } from "@/app/(auth)/actions";
 import LiveStreak from "./LiveStreak";
 import HeaderNav from "./HeaderNav";
 
+type ProfileRow = { username: string };
+type StreakRow = { current_streak: number };
+
 export default async function DashboardHeader() {
   const supabase = getSupabaseServerClient();
   const {
@@ -14,11 +17,17 @@ export default async function DashboardHeader() {
 
   if (user) {
     const [{ data: profile }, { data: streak }] = await Promise.all([
-      supabase.from("profiles").select("username").eq("id", user.id).single(),
+      supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", user.id)
+        .returns<ProfileRow>()
+        .single(),
       supabase
         .from("user_streaks")
         .select("current_streak")
         .eq("user_id", user.id)
+        .returns<StreakRow>()
         .single(),
     ]);
     username = profile?.username ?? "";
