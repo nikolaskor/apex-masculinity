@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
+type StreakUpdatePayload = { current_streak?: number };
+
 export default function LiveStreak({ initial }: { initial: number }) {
   const supabase = getSupabaseBrowserClient();
   const [streak, setStreak] = useState(initial);
@@ -24,9 +26,8 @@ export default function LiveStreak({ initial }: { initial: number }) {
             filter: `user_id=eq.${userId}`,
           },
           (payload) => {
-            const newValue = (payload.new as any)?.current_streak as
-              | number
-              | undefined;
+            const newValue = (payload.new as StreakUpdatePayload)
+              ?.current_streak;
             if (typeof newValue === "number") setStreak(newValue);
           }
         )

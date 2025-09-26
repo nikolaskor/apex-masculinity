@@ -3,7 +3,16 @@ import LeaderboardTable from "@/components/leaderboard/LeaderboardTable";
 import LiveLeaderboard from "@/components/leaderboard/LiveLeaderboard";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 
-async function loadLeaderboard() {
+type Entry = {
+  user_id: string;
+  username: string;
+  current_streak: number;
+  badges: string[];
+  rank: number;
+  isCurrentUser: boolean;
+};
+
+async function loadLeaderboard(): Promise<Entry[]> {
   const supabase = getSupabaseServerClient();
   const {
     data: { user },
@@ -14,34 +23,34 @@ async function loadLeaderboard() {
     .from("user_streaks")
     .select("user_id,current_streak,badges");
 
-  if (!streaks || streaks.length === 0) return [] as Array<any>;
+  if (!streaks || streaks.length === 0) return [];
 
   // Fetch matching profiles for usernames
-  const userIds = streaks.map((s) => s.user_id);
+  const userIds = streaks.map((s) => s.user_id as string);
   const { data: profiles } = await supabase
     .from("profiles")
     .select("id,username")
     .in("id", userIds);
 
+  const typedProfiles = (profiles ?? []) as { id: string; username: string }[];
   const idToUsername = new Map<string, string>(
-    (profiles || []).map((p) => [p.id as string, (p.username as string) ?? ""])
+    typedProfiles.map((p) => [p.id, p.username ?? ""])
   );
 
-  const entries = streaks
-    .map((r) => ({
-      user_id: r.user_id as string,
-      username: idToUsername.get(r.user_id as string) ?? "",
-      current_streak: (r.current_streak as number) ?? 0,
-      badges: (r.badges as string[]) ?? [],
-    }))
+  const base = streaks.map((r) => ({
+    user_id: r.user_id as string,
+    username: idToUsername.get(r.user_id as string) ?? "",
+    current_streak: (r.current_streak as number) ?? 0,
+    badges: (r.badges as unknown as string[]) ?? [],
+  }));
+
+  return base
     .sort((a, b) => b.current_streak - a.current_streak)
     .map((e, i) => ({
       ...e,
       rank: i + 1,
       isCurrentUser: e.user_id === user?.id,
     }));
-
-  return entries;
 }
 
 export default async function LeaderboardPage() {
