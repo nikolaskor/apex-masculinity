@@ -12,11 +12,13 @@ export default async function DashboardHeader() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  let profile: ProfileRow | null = null;
+  let streak: StreakRow | null = null;
   let username = "";
   let currentStreak = 0;
 
   if (user) {
-    const [{ data: profile }, { data: streak }] = await Promise.all([
+    const results = await Promise.all([
       supabase
         .from("profiles")
         .select("username")
@@ -30,6 +32,12 @@ export default async function DashboardHeader() {
         .returns<StreakRow>()
         .single(),
     ]);
+
+    // Cleanly assign the data from the results array
+    profile = results[0].data;
+    streak = results[1].data;
+
+    // Access properties safely
     username = profile?.username ?? "";
     currentStreak = streak?.current_streak ?? 0;
   }
