@@ -23,12 +23,12 @@ export default function WeeklyChallengeCard() {
         const userId = session.data.session?.user.id;
         if (!userId) throw new Error("Not authenticated");
 
-        // Fetch current streak to compute week
+        // Fetch current streak to compute week (tolerate missing row for new users)
         const { data: streak, error: streakErr } = await supabase
           .from("user_streaks")
           .select("current_streak")
           .eq("user_id", userId)
-          .single();
+          .maybeSingle();
         if (streakErr) throw streakErr;
         const week = computeWeek(streak?.current_streak ?? 0);
 
@@ -49,11 +49,13 @@ export default function WeeklyChallengeCard() {
         if (compErr) throw compErr;
 
         if (!active) return;
-        setChallenge(wc);
+        setChallenge(wc as WeeklyChallenge);
         setCompleted(Boolean(todayCompletion?.weekly_challenge_completed));
-      } catch (e: any) {
+      } catch (e) {
         if (!active) return;
-        setError(e.message || "Failed to load weekly challenge");
+        setError(
+          e instanceof Error ? e.message : "Failed to load weekly challenge"
+        );
       } finally {
         if (active) setLoading(false);
       }
@@ -96,8 +98,10 @@ export default function WeeklyChallengeCard() {
         );
         if (error) throw error;
         setCompleted(true);
-      } catch (e: any) {
-        setError(e.message || "Failed to update weekly challenge");
+      } catch (e) {
+        setError(
+          e instanceof Error ? e.message : "Failed to update weekly challenge"
+        );
       }
     });
   };
