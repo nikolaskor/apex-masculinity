@@ -2,11 +2,8 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import type {
-  ChallengeTask,
-  DailyCompletion,
-  UserStreak,
-} from "@/types/database";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ChallengeTask, DailyCompletion } from "@/types/database";
 import { useTimezone } from "./useTimezone";
 import { mergeBadges } from "@/lib/badges";
 
@@ -66,7 +63,7 @@ export function useDailyTasks(): DailyState {
         if (compErr) throw compErr;
         if (!active) return;
         setTasks((taskData as ChallengeTask[]) || []);
-        setCompletion((completionRow as DailyCompletion) || null);
+        setCompletion((completionRow as DailyCompletion | null) || null);
       } catch (e) {
         if (!active) return;
         setError(e instanceof Error ? e.message : "Failed to load daily tasks");
@@ -121,7 +118,9 @@ export function useDailyTasks(): DailyState {
         const wasWeeklyDone = Boolean(existing?.weekly_challenge_completed);
 
         // Upsert today's row preserving current weekly flag
-        const { data: upsertRow, error: upsertErr } = await supabase
+        const { data: upsertRow, error: upsertErr } = await (
+          supabase as SupabaseClient
+        )
           .from("daily_completions")
           .upsert(
             {
@@ -146,13 +145,20 @@ export function useDailyTasks(): DailyState {
 
         // Increment streak when 10/10 daily tasks are completed (weekly is optional)
         if (prevCount < 10 && tasks_completed.length === 10) {
+          type StreakData = {
+            current_streak: number;
+            longest_streak: number;
+            badges: unknown;
+          };
+
           const { data: streakRow, error: streakErr } = await supabase
             .from("user_streaks")
             .select("current_streak,longest_streak,badges")
             .eq("user_id", userId)
+            .returns<StreakData>()
             .single();
           if (streakErr) throw streakErr;
-          const row = streakRow as Partial<UserStreak> | null;
+          const row = streakRow as StreakData | null;
           const newCurrent =
             ((row?.current_streak as number | undefined) ?? 0) + 1;
           const newLongest = Math.max(
@@ -161,7 +167,7 @@ export function useDailyTasks(): DailyState {
           );
           const newBadges = mergeBadges(row?.badges, newCurrent);
 
-          const { error: updateErr } = await supabase
+          const { error: updateErr } = await (supabase as SupabaseClient)
             .from("user_streaks")
             .update({
               current_streak: newCurrent,

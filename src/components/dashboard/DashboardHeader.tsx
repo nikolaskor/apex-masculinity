@@ -19,23 +19,17 @@ export default async function DashboardHeader() {
 
   if (user) {
     const results = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", user.id)
-        .returns<ProfileRow>()
-        .single(),
+      supabase.from("profiles").select("username").eq("id", user.id).single(),
       supabase
         .from("user_streaks")
         .select("current_streak")
         .eq("user_id", user.id)
-        .returns<StreakRow>()
         .single(),
     ]);
 
-    // Cleanly assign the data from the results array
-    profile = results[0].data;
-    streak = results[1].data;
+    // Explicitly cast the data to the correct types
+    profile = results[0].data as ProfileRow | null;
+    streak = results[1].data as StreakRow | null;
 
     // Access properties safely
     username = profile?.username ?? "";
