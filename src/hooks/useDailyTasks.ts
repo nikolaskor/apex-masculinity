@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { ChallengeTask, DailyCompletion } from "@/types/database";
+import type {
+  ChallengeTask,
+  DailyCompletion,
+  UserStreak,
+} from "@/types/database";
 import { useTimezone } from "./useTimezone";
 import { mergeBadges } from "@/lib/badges";
 
@@ -49,21 +53,23 @@ export function useDailyTasks(): DailyState {
         const userId = sessionData.session?.user.id;
         if (!userId) throw new Error("Not authenticated");
         const today = getLocalDateString();
-        const { data: completionData, error: compErr } = await supabase
+        const { data: completionRow, error: compErr } = await supabase
           .from("daily_completions")
           .select(
             "id,user_id,completion_date,tasks_completed,weekly_challenge_completed,week_number,timezone,created_at"
           )
           .eq("user_id", userId)
           .eq("completion_date", today)
+          .order("created_at", { ascending: false })
+          .limit(1)
           .maybeSingle();
         if (compErr) throw compErr;
         if (!active) return;
-        setTasks(taskData || []);
-        setCompletion(completionData || null);
-      } catch (e: any) {
+        setTasks((taskData as ChallengeTask[]) || []);
+        setCompletion((completionRow as DailyCompletion) || null);
+      } catch (e) {
         if (!active) return;
-        setError(e.message || "Failed to load daily tasks");
+        setError(e instanceof Error ? e.message : "Failed to load daily tasks");
       } finally {
         if (active) setLoading(false);
       }
@@ -85,14 +91,19 @@ export function useDailyTasks(): DailyState {
         const today = getLocalDateString();
 
         // Fetch the freshest row to avoid overwriting weekly toggle from another component
-        const { data: existing, error: readErr } = await supabase
+        const { data: existingRow, error: readErr } = await supabase
           .from("daily_completions")
-          .select("tasks_completed,weekly_challenge_completed,week_number")
+          .select(
+            "tasks_completed,weekly_challenge_completed,week_number,created_at"
+          )
           .eq("user_id", userId)
           .eq("completion_date", today)
+          .order("created_at", { ascending: false })
+          .limit(1)
           .maybeSingle();
         if (readErr) throw readErr;
 
+        const existing = existingRow as Partial<DailyCompletion> | null;
         const existingCompleted: number[] = Array.isArray(
           existing?.tasks_completed
         )
@@ -104,11 +115,13 @@ export function useDailyTasks(): DailyState {
         newCompleted.add(taskId);
         const tasks_completed = Array.from(newCompleted);
         const week_number =
-          existing?.week_number ?? completion?.week_number ?? null;
+          (existing?.week_number as number | null) ??
+          completion?.week_number ??
+          null;
         const wasWeeklyDone = Boolean(existing?.weekly_challenge_completed);
 
         // Upsert today's row preserving current weekly flag
-        const { error: upsertErr, data } = await supabase
+        const { data: upsertRow, error: upsertErr } = await supabase
           .from("daily_completions")
           .upsert(
             {
@@ -121,26 +134,32 @@ export function useDailyTasks(): DailyState {
             },
             { onConflict: "user_id,completion_date" }
           )
-          .select()
-          .single();
+          .select(
+            "id,user_id,completion_date,tasks_completed,weekly_challenge_completed,week_number,timezone,created_at"
+          )
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
         if (upsertErr) throw upsertErr;
-        const saved = data as DailyCompletion;
-        setCompletion(saved);
+        const saved = upsertRow as DailyCompletion | null;
+        if (saved) setCompletion(saved);
 
         // Increment streak when 10/10 daily tasks are completed (weekly is optional)
         if (prevCount < 10 && tasks_completed.length === 10) {
           const { data: streakRow, error: streakErr } = await supabase
             .from("user_streaks")
-            .select("id,current_streak,longest_streak,badges")
+            .select("current_streak,longest_streak,badges")
             .eq("user_id", userId)
             .single();
           if (streakErr) throw streakErr;
-          const newCurrent = (streakRow?.current_streak ?? 0) + 1;
+          const row = streakRow as Partial<UserStreak> | null;
+          const newCurrent =
+            ((row?.current_streak as number | undefined) ?? 0) + 1;
           const newLongest = Math.max(
-            streakRow?.longest_streak ?? 0,
+            (row?.longest_streak as number | undefined) ?? 0,
             newCurrent
           );
-          const newBadges = mergeBadges(streakRow?.badges, newCurrent);
+          const newBadges = mergeBadges(row?.badges, newCurrent);
 
           const { error: updateErr } = await supabase
             .from("user_streaks")
@@ -153,8 +172,8 @@ export function useDailyTasks(): DailyState {
             .eq("user_id", userId);
           if (updateErr) throw updateErr;
         }
-      } catch (e: any) {
-        setError(e.message || "Failed to complete task");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to complete task");
       }
     });
   };
