@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { ChallengeTask, DailyCompletion } from "@/types/database";
 import { useTimezone } from "./useTimezone";
+import { mergeBadges } from "@/lib/badges";
 
 interface DailyState {
   tasks: ChallengeTask[];
@@ -83,11 +84,30 @@ export function useDailyTasks(): DailyState {
         if (!userId) throw new Error("Not authenticated");
         const today = getLocalDateString();
 
-        const newCompleted = new Set(completed);
+        // Fetch the freshest row to avoid overwriting weekly toggle from another component
+        const { data: existing, error: readErr } = await supabase
+          .from("daily_completions")
+          .select("tasks_completed,weekly_challenge_completed,week_number")
+          .eq("user_id", userId)
+          .eq("completion_date", today)
+          .maybeSingle();
+        if (readErr) throw readErr;
+
+        const existingCompleted: number[] = Array.isArray(
+          existing?.tasks_completed
+        )
+          ? (existing!.tasks_completed as number[])
+          : Array.from(completed);
+        const prevCount = existingCompleted.length;
+
+        const newCompleted = new Set(existingCompleted);
         newCompleted.add(taskId);
         const tasks_completed = Array.from(newCompleted);
+        const week_number =
+          existing?.week_number ?? completion?.week_number ?? null;
+        const wasWeeklyDone = Boolean(existing?.weekly_challenge_completed);
 
-        // Upsert today's row (respect unique(user_id, completion_date))
+        // Upsert today's row preserving current weekly flag
         const { error: upsertErr, data } = await supabase
           .from("daily_completions")
           .upsert(
@@ -95,9 +115,8 @@ export function useDailyTasks(): DailyState {
               user_id: userId,
               completion_date: today,
               tasks_completed,
-              weekly_challenge_completed:
-                completion?.weekly_challenge_completed ?? false,
-              week_number: completion?.week_number ?? null,
+              weekly_challenge_completed: wasWeeklyDone,
+              week_number,
               timezone,
             },
             { onConflict: "user_id,completion_date" }
@@ -105,7 +124,35 @@ export function useDailyTasks(): DailyState {
           .select()
           .single();
         if (upsertErr) throw upsertErr;
-        setCompletion(data as DailyCompletion);
+        const saved = data as DailyCompletion;
+        setCompletion(saved);
+
+        // Increment streak when 10/10 daily tasks are completed (weekly is optional)
+        if (prevCount < 10 && tasks_completed.length === 10) {
+          const { data: streakRow, error: streakErr } = await supabase
+            .from("user_streaks")
+            .select("id,current_streak,longest_streak,badges")
+            .eq("user_id", userId)
+            .single();
+          if (streakErr) throw streakErr;
+          const newCurrent = (streakRow?.current_streak ?? 0) + 1;
+          const newLongest = Math.max(
+            streakRow?.longest_streak ?? 0,
+            newCurrent
+          );
+          const newBadges = mergeBadges(streakRow?.badges, newCurrent);
+
+          const { error: updateErr } = await supabase
+            .from("user_streaks")
+            .update({
+              current_streak: newCurrent,
+              longest_streak: newLongest,
+              last_completion_date: today,
+              badges: newBadges,
+            })
+            .eq("user_id", userId);
+          if (updateErr) throw updateErr;
+        }
       } catch (e: any) {
         setError(e.message || "Failed to complete task");
       }
