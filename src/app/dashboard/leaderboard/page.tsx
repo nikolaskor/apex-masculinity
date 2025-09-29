@@ -21,7 +21,7 @@ type StreakRow = {
 type ProfileRow = { id: string; username: string };
 
 async function loadLeaderboard(): Promise<Entry[]> {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

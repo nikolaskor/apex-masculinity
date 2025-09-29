@@ -2,7 +2,12 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { WeeklyChallenge } from "@/types/database";
+import type {
+  WeeklyChallenge,
+  UserStreak,
+  DailyCompletion,
+  Tables,
+} from "@/types/database";
 import { useTimezone } from "@/hooks/useTimezone";
 import { computeWeek } from "@/lib/weekly";
 
@@ -24,11 +29,14 @@ export default function WeeklyChallengeCard() {
         if (!userId) throw new Error("Not authenticated");
 
         // Fetch current streak to compute week (tolerate missing row for new users)
-        const { data: streak, error: streakErr } = await supabase
+        const { data: streak, error: streakErr } = (await supabase
           .from("user_streaks")
           .select("current_streak")
           .eq("user_id", userId)
-          .maybeSingle();
+          .maybeSingle()) as {
+          data: Pick<UserStreak, "current_streak"> | null;
+          error: Error | null;
+        };
         if (streakErr) throw streakErr;
         const week = computeWeek(streak?.current_streak ?? 0);
 
@@ -40,12 +48,18 @@ export default function WeeklyChallengeCard() {
         if (wcErr) throw wcErr;
 
         const today = getLocalDateString();
-        const { data: todayCompletion, error: compErr } = await supabase
+        const { data: todayCompletion, error: compErr } = (await supabase
           .from("daily_completions")
           .select("weekly_challenge_completed,tasks_completed,week_number")
           .eq("user_id", userId)
           .eq("completion_date", today)
-          .maybeSingle();
+          .maybeSingle()) as {
+          data: Pick<
+            DailyCompletion,
+            "weekly_challenge_completed" | "tasks_completed" | "week_number"
+          > | null;
+          error: Error | null;
+        };
         if (compErr) throw compErr;
 
         if (!active) return;
@@ -75,27 +89,31 @@ export default function WeeklyChallengeCard() {
         const today = getLocalDateString();
 
         // Read existing row to preserve tasks_completed and week_number
-        const { data: existing, error: readErr } = await supabase
+        const { data: existing, error: readErr } = (await supabase
           .from("daily_completions")
           .select("tasks_completed,week_number")
           .eq("user_id", userId)
           .eq("completion_date", today)
-          .maybeSingle();
+          .maybeSingle()) as {
+          data: Pick<DailyCompletion, "tasks_completed" | "week_number"> | null;
+          error: Error | null;
+        };
         if (readErr) throw readErr;
         const tasks_completed = (existing?.tasks_completed as number[]) ?? [];
         const week_number = existing?.week_number ?? null;
 
-        const { error } = await supabase.from("daily_completions").upsert(
-          {
-            user_id: userId,
-            completion_date: today,
-            tasks_completed,
-            weekly_challenge_completed: true,
-            week_number,
-            timezone,
-          },
-          { onConflict: "user_id,completion_date" }
-        );
+        const upsertData: Tables["daily_completions"]["Insert"] = {
+          user_id: userId,
+          completion_date: today,
+          tasks_completed,
+          weekly_challenge_completed: true,
+          week_number,
+          timezone,
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await (supabase as any)
+          .from("daily_completions")
+          .upsert(upsertData, { onConflict: "user_id,completion_date" });
         if (error) throw error;
         setCompleted(true);
       } catch (e) {

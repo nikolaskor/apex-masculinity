@@ -34,7 +34,7 @@ export async function registerAction(formData: FormData) {
   }
 
   const { email, password, username } = parsed.data;
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
 
   // Provide username via user_metadata so DB trigger can consume it
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -66,7 +66,7 @@ export async function loginAction(formData: FormData) {
     return { ok: false, error: parsed.error.flatten().fieldErrors } as const;
   }
 
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
     return { ok: false, error: { root: [error.message] } } as const;
@@ -76,7 +76,7 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function logoutAction() {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   await supabase.auth.signOut();
   redirect("/login");
 }

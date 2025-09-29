@@ -7,7 +7,7 @@ type ProfileRow = { username: string };
 type StreakRow = { current_streak: number };
 
 export default async function DashboardHeader() {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

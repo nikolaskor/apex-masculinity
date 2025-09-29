@@ -3,8 +3,10 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
-export function getSupabaseServerClient(): SupabaseClient<Database> {
-  const cookieStore = cookies();
+export async function getSupabaseServerClient(): Promise<
+  SupabaseClient<Database>
+> {
+  const cookieStore = await cookies();
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -21,10 +23,20 @@ export function getSupabaseServerClient(): SupabaseClient<Database> {
         return cookieStore.get(name)?.value;
       },
       set(name: string, value: string, options: CookieOptions) {
-        cookieStore.set({ name, value, ...options });
+        try {
+          cookieStore.set({ name, value, ...options });
+        } catch {
+          // In Next.js App Router, cookie modifications are only allowed in Server Actions/Route Handlers
+          // This is expected behavior when reading data in components
+        }
       },
       remove(name: string, options: CookieOptions) {
-        cookieStore.set({ name, value: "", ...options });
+        try {
+          cookieStore.set({ name, value: "", ...options });
+        } catch {
+          // In Next.js App Router, cookie modifications are only allowed in Server Actions/Route Handlers
+          // This is expected behavior when reading data in components
+        }
       },
     },
   });

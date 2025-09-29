@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default async function AuthGuard({ children }: Props) {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();
