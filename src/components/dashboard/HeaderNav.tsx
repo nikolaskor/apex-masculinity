@@ -10,10 +10,10 @@ function NavLink({ href, label }: { href: string; label: string }) {
     <Link
       href={href}
       className={
-        "px-3 py-1 rounded text-sm " +
+        "px-3 py-1 rounded-lg text-sm transition-colors " +
         (active
-          ? "bg-white text-black"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted/40")
+          ? "bg-gradient-to-b from-[#FFD700] to-[#F4C430] text-black shadow-[0_8px_24px_rgba(255,215,0,0.25)]"
+          : "text-white/70 hover:text-white hover:bg-white/10")
       }
     >
       {label}

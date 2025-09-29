@@ -12,7 +12,7 @@ export default function LeaderboardTable({ entries }: { entries: Entry[] }) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-left border-b">
+          <tr className="text-left border-b border-[#FFD700]/20">
             <th className="py-2 px-3">#</th>
             <th className="py-2 px-3">User</th>
             <th className="py-2 px-3">Badge</th>
@@ -23,9 +23,14 @@ export default function LeaderboardTable({ entries }: { entries: Entry[] }) {
           {entries.map((e) => (
             <tr
               key={e.user_id}
-              className={e.isCurrentUser ? "bg-muted/40" : undefined}
+              className={
+                (e.isCurrentUser ? "bg-white/10 " : "") +
+                "hover:bg-white/5 transition-colors"
+              }
             >
-              <td className="py-2 px-3 font-medium">{e.rank}</td>
+              <td className="py-2 px-3 font-semibold text-[#FFD700]">
+                {e.rank}
+              </td>
               <td className="py-2 px-3">@{e.username}</td>
               <td className="py-2 px-3">{e.badges?.slice(-1)[0] ?? "-"}</td>
               <td className="py-2 px-3">{e.current_streak} days</td>

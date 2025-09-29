@@ -67,15 +67,21 @@ export default async function LeaderboardPage() {
   const entries = await loadLeaderboard();
 
   return (
-    <main>
+    <main className="min-h-svh bg-[radial-gradient(1200px_600px_at_10%_-20%,rgba(255,215,0,0.14),transparent_60%),radial-gradient(1000px_600px_at_90%_10%,rgba(244,196,48,0.10),transparent_60%),linear-gradient(180deg,#0A0A0A_0%,#111111_35%,#1A1A1A_100%)]">
       <DashboardHeader />
-      <section className="mx-auto max-w-4xl px-4 py-6 space-y-4">
+      <section className="mx-auto max-w-4xl px-4 py-8 space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Leaderboard</h1>
-          <div className="text-sm text-muted-foreground">Live updates</div>
+          <h1 className="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#FFD700] to-[#c7a600]">
+            Leaderboard
+          </h1>
+          <div className="text-sm text-white/70">Live updates</div>
         </div>
-        <LeaderboardTable entries={entries} />
-        <LiveLeaderboard />
+        <div className="rounded-2xl border border-[#FFD700]/20 bg-white/5 backdrop-blur p-4 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
+          <LeaderboardTable entries={entries} />
+        </div>
+        <div className="rounded-2xl border border-[#FFD700]/20 bg-white/5 backdrop-blur p-4 shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
+          <LiveLeaderboard />
+        </div>
       </section>
     </main>
   );

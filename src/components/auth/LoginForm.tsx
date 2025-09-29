@@ -41,10 +41,10 @@ export default function LoginForm() {
       className="space-y-4 max-w-sm w-full"
     >
       <div>
-        <label className="block text-sm font-medium">Email</label>
+        <label className="block text-sm font-semibold">Email</label>
         <input
           type="email"
-          className="mt-1 w-full rounded border px-3 py-2 bg-background"
+          className="mt-1 w-full rounded-lg border border-[#FFD700]/30 bg-black/40 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#FFD700]/50"
           placeholder="you@example.com"
           {...register("email")}
         />
@@ -53,10 +53,10 @@ export default function LoginForm() {
         )}
       </div>
       <div>
-        <label className="block text-sm font-medium">Password</label>
+        <label className="block text-sm font-semibold">Password</label>
         <input
           type="password"
-          className="mt-1 w-full rounded border px-3 py-2 bg-background"
+          className="mt-1 w-full rounded-lg border border-[#FFD700]/30 bg-black/40 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#FFD700]/50"
           placeholder="••••••••"
           {...register("password")}
         />
@@ -69,7 +69,7 @@ export default function LoginForm() {
       )}
       <button
         type="submit"
-        className="w-full rounded bg-black text-white py-2 disabled:opacity-50"
+        className="w-full rounded-xl py-2 font-bold text-black bg-gradient-to-b from-[#FFD700] to-[#F4C430] shadow-[0_8px_24px_rgba(255,215,0,0.25)] hover:brightness-105 disabled:opacity-50"
         disabled={isPending}
       >
         {isPending ? "Logging in..." : "Login"}
